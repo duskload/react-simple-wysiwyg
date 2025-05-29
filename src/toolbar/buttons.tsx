@@ -1,8 +1,42 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { HTMLAttributes, MouseEvent, ReactNode } from 'react';
 import { EditorState, useEditorState } from '../editor/EditorContext';
 import OrderedListIcon from './icons/OrderedListIcon';
 import UnorderedListIcon from './icons/UnorderedListIcon';
+
+export function LinkModal({ isOpen, onClose, onSubmit }: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (url: string) => void;
+}) {
+  const [url, setUrl] = useState('');
+
+  function handleSubmit() {
+    if (url) {
+      onSubmit(url);
+      onClose();
+    }
+  }
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-container">
+      <div className="modal-content">
+        <h2>Enter a URL</h2>
+        <input
+          type="text"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          placeholder="https://example.com"
+        />
+        <button onClick={handleSubmit}>Insert Link</button>
+        <button onClick={onClose}>Cancel</button>
+      </div>
+    </div>
+  );
+}
+
 
 export const BtnBold = createButton('Bold', '𝐁', 'bold');
 
@@ -50,6 +84,29 @@ export const BtnUnderline = createButton(
 );
 
 export const BtnUndo = createButton('Undo', '↶', 'undo');
+
+export const BtnModalLink = createButton('Link', '🔗', ({ $selection }) => {
+  const [modalOpen, setModalOpen] = useState(false);
+
+  function handleInsertLink(url: string) {
+    if ($selection?.nodeName === 'A') {
+      document.execCommand('unlink');
+    } else {
+      document.execCommand('createLink', false, url);
+    }
+  }
+
+  return (
+    <>
+      <button onClick={() => setModalOpen(true)}>🔗</button>
+      <LinkModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSubmit={handleInsertLink}
+      />
+    </>
+  );
+});
 
 export function createButton(
   title: string,
